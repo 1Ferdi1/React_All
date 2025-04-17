@@ -25,3 +25,6 @@ class Polygon {
         return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
     }
 }
+
+
+export default Polygon;

@@ -5,3 +5,5 @@ class Point{
         this.z=z;
     }
 }
+
+export default Point;

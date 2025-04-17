@@ -4,3 +4,5 @@ class Edge{
         this.p2=p2;
     }
 }
+
+export default Edge;

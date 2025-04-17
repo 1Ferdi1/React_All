@@ -5,3 +5,5 @@ class Figure{
         this.polygons=polygons;
     }
 }
+
+export default Figure;
