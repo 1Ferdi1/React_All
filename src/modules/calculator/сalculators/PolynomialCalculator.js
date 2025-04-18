@@ -1,6 +1,6 @@
 import Polynomial from '../classes/Polynomial.js';
 import Member from '../classes/Member.js';
-import _Calculator from './Calculator.js';
+import _Calculator from '../Calculator.js';
 
 class PolynomialCalculator {
     polynomial(members) {

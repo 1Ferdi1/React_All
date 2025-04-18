@@ -1,4 +1,4 @@
-import React from 'react';
+import {useState} from 'react';
 import Menu from './components/Menu/Menu';
 import RPG from './components/RPG/RPG';
 import Graph3D from './components/Graph3D/Graph3D';
@@ -8,30 +8,18 @@ import Esse from './components/Esse/Esse';
 
 import './App.css';
 
-class App extends React.Component {
-  constructor(props){
-    super(props);
-      this.state={
-        pageName: 'Graph3D'
-      };
-  }
-
-  showPage(name){
-    this.setState({pageName: name});
-  }
-
-  render () {
+const App = () => {
+    const [page, setPage] = useState('Graph3D')
     return (
       <div>
-        <Menu showPage={(name)=> this.showPage(name)} />
-        {this.state.pageName === 'Graph3D' && <Graph3D />}
-        {this.state.pageName === 'RPG' && <RPG />}
-        {this.state.pageName === 'Graph2D' && <Graph2D />}
-        {this.state.pageName === 'Calculator' && <Calculator />}
-        {this.state.pageName === 'Esse' && <Esse />}
+        <Menu showPage={setPage} />
+        {page === 'Graph3D' && <Graph3D />}
+        {page === 'RPG' && <RPG />}
+        {page === 'Graph2D' && <Graph2D />}
+        {page === 'Calculator' && <Calculator />}
+        {page === 'Esse' && <Esse />}
       </div>
     );
-  }
 }
 
 export default App;

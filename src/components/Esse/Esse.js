@@ -1,7 +1,4 @@
-import React from "react";
-
-class Esse extends React.Component {
-    render(){
+const Esse = ()  => {
         return(
             <>
             <h2>Как я попал в университет УдГУ</h2>
@@ -29,6 +26,5 @@ class Esse extends React.Component {
             </>
         );
     }
-}
 
 export default Esse;

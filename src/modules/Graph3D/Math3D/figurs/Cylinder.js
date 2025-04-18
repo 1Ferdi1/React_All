@@ -57,6 +57,7 @@ class Cylinder extends Figure {
             }
         }
     }
+    
 
     generatePolygons() {
         for (let ring = 0; ring < this.heightSegments - 1; ring++) {

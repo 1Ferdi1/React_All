@@ -1,16 +1,16 @@
 import React from 'react';
 
-import Complex from '../classes/Complex';
-import Matrix from '../classes/Matrix';
-import Member from '../classes/Member';
-import Polynomial from '../classes/Polynomial';
-import Vector from '../classes/Vector';
+import Complex from './classes/Complex';
+import Matrix from './classes/Matrix';
+import Member from './classes/Member';
+import Polynomial from './classes/Polynomial';
+import Vector from './classes/Vector';
 
-import ComplexCalculator from './ComplexCalculator';
-import MatrixCalculator from './MatrixCalculator';
-import VectorCalculator from './VectorCalculator';
-import PolynomialCalculator from './PolynomialCalculator';
-import RealCalculator from './RealCalculator';
+import ComplexCalculator from './сalculators/ComplexCalculator';
+import MatrixCalculator from './сalculators/MatrixCalculator';
+import VectorCalculator from './сalculators/VectorCalculator';
+import PolynomialCalculator from './сalculators/PolynomialCalculator';
+import RealCalculator from './сalculators/RealCalculator';
 
 class calculatorCore extends React.Component {
     complex(re, im) {

@@ -1,4 +1,4 @@
-import _Calculator from '../сalculators/Calculator';
+import _Calculator from '../Calculator';
 
 class Polynomial {
     constructor(poly = []) {
