@@ -6,7 +6,7 @@ import Polygon from '../entities/Polygon';
 
 
 class Sphere extends Figure {
-    constructor(radialSegments = 20, polarSegments = 1000, radius = 10) {
+    constructor(radialSegments = 20, polarSegments = 10, radius = 10) {
         super();
         this.radialSegments = radialSegments;
         this.polarSegments = polarSegments;

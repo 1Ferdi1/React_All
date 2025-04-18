@@ -1,10 +1,26 @@
 class Canvas {
-    constructor({ WIN, id, width = 600, height = 600, callbacks = {} }) {
+    constructor({ 
+        WIN, 
+        id, 
+        canvas: providedCanvas, // Добавлен параметр canvas
+        width = 600, 
+        height = 600, 
+        callbacks = {} 
+    }) {
         this.WIN = WIN;
-        this.canvas = document.getElementById(id);
+        // Используем переданный canvas, если он есть, иначе ищем по id
+        this.canvas = providedCanvas || (id ? document.getElementById(id) : null);
+
+        if (!this.canvas) {
+            throw new Error(`Canvas не найден: id="${id}", canvas=${providedCanvas}`);
+        }
+
+        // Устанавливаем размеры canvas
         this.canvas.width = width;
         this.canvas.height = height;
-        this.context = this.canvas.getContext(`2d`);
+        this.context = this.canvas.getContext('2d');
+
+        // Привязка событий
         this.canvas.addEventListener('wheel', callbacks.wheel);
         this.canvas.addEventListener('mousemove', callbacks.mousemove);
         this.canvas.addEventListener('mouseup', callbacks.mouseup);
@@ -12,20 +28,24 @@ class Canvas {
         this.canvas.addEventListener('mouseleave', callbacks.mouseleave);
     }
 
+    // Методы для преобразования координат
     xs(x) {
-        return this.canvas.width * (x - this.WIN.LEFT) / this.WIN.WIDTH
+        return this.canvas.width * (x - this.WIN.LEFT) / this.WIN.WIDTH;
     }
+
     ys(y) {
-        return this.canvas.height - (this.canvas.height * (y - this.WIN.BOTTOM) / this.WIN.HEIGHT)
+        return this.canvas.height - (this.canvas.height * (y - this.WIN.BOTTOM) / this.WIN.HEIGHT);
     }
 
     sx(x) {
         return this.WIN.WIDTH * x / this.canvas.width;
     }
+
     sy(y) {
         return this.WIN.HEIGHT * y / this.canvas.height;
     }
 
+    // Остальные методы (line, text, point и т.д.)
     line(x1, y1, x2, y2, color, width) {
         this.context.beginPath();
         this.context.strokeStyle = color || 'black';
@@ -70,7 +90,6 @@ class Canvas {
     }
 
     tablet(x, y, color = 'red', size = 2, reverse) {
-        size = size;
         this.context.beginPath();
         this.context.strokeStyle = color;
         this.context.fillStyle = color;
@@ -85,8 +104,6 @@ class Canvas {
         this.context.stroke();
         this.context.fill();
     }
-    
 }
-
 
 export default Canvas;
