@@ -1,51 +1,37 @@
-import React from 'react';
+import { useRef } from 'react';
 import calculatorCore from '../../modules/calculator/Calculator';
 
-class Calculator extends React.Component {
 
-    operandHandler(operand) {
-        const calc = new calculatorCore();
-        let result = '';
-        if (operand === 'getValue') {
-            const polynomStr = document.getElementById('A').value.trim();
-            const xStr = document.getElementById('xVal').value.trim();
-            const polynomial = calc.getEntity(polynomStr);
-            const xValue = calc.getEntity(xStr);
-            result = polynomial.getValue(xValue).toString();
-            document.getElementById('C').value = result;
-            return;
+const Calculator=()=> {
+    const aRef = useRef();
+    const bRef = useRef();
+    const cRef = useRef();
+    const operandHandler=(operand) => {
+        const Calculator = new calculatorCore;
+        const a = Calculator.getValue(aRef.current.value);
+        const b = Calculator.getValue(bRef.current.value);
+        const c = Calculator[operand](a,b);
+        cRef.current.value = c.toString();
         }
-        const A = document.getElementById('A').value.trim();
-        const B = document.getElementById('B').value.trim();
-        result = calc[operand](calc.getEntity(A), calc.getEntity(B)).toString();
-        document.getElementById('C').value = result;
-    }
-
-    render() {
         return (
             <div className="calculator-container">
-                <textarea id="A" placeholder="A" rows="15" cols="20"></textarea>
-
-                <textarea id="B" placeholder="B" rows="15" cols="20"></textarea>
-
-                <textarea id="C" placeholder="Result" rows="15" cols="20"></textarea>
-
+                <textarea ref={aRef} placeholder='A'></textarea>
+                <textarea ref={bRef} placeholder='B'></textarea>
+                <textarea ref={cRef} placeholder='Result'></textarea>
 
                 <div className="operands">
-                    <button className="operand" onClick={() => this.operandHandler('add')}>+</button>
-                    <button className="operand" onClick={() => this.operandHandler('sub')}>-</button>
-                    <button className="operand" onClick={() => this.operandHandler('mult')}>×</button>
-                    <button className="operand" onClick={() => this.operandHandler('div')}>÷</button>
-                    <button className="operand" onClick={() => this.operandHandler('pow')}>^</button>
-                    <button className="operand" onClick={() => this.operandHandler('prod')}>Prod</button>
-                    <button className="operand" onClick={() => this.operandHandler('one')}>One</button>
-                    <button className="operand" onClick={() => this.operandHandler('zero')}>Zero</button>
-                    <button className="operand" onClick={() => this.operandHandler('get value')}>Get value</button>
-                    <textarea id="xVal" placeholder="Введите значение x" rows="10" cols="20"></textarea>
+                    <button onClick={() => operandHandler('add')}>+</button>
+                    <button onClick={() => operandHandler('sub')}>-</button>
+                    <button onClick={() => operandHandler('mult')}>×</button>
+                    <button onClick={() => operandHandler('div')}>÷</button>
+                    <button onClick={() => operandHandler('pow')}>^</button>
+                    <button onClick={() => operandHandler('prod')}>Prod</button>
+                    <button onClick={() => operandHandler('one')}>One</button>
+                    <button onClick={() => operandHandler('zero')}>Zero</button>
+                    <button onClick={() => operandHandler('get value')}>Get value</button>
                 </div>
             </div>
-        )
+        );
     }
-}
 
 export default Calculator;
