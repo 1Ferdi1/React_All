@@ -2,25 +2,22 @@ class Canvas {
     constructor({ 
         WIN, 
         id, 
-        canvas: providedCanvas, // Добавлен параметр canvas
+        canvas: providedCanvas,
         width = 600, 
         height = 600, 
         callbacks = {} 
     }) {
         this.WIN = WIN;
-        // Используем переданный canvas, если он есть, иначе ищем по id
         this.canvas = providedCanvas || (id ? document.getElementById(id) : null);
 
         if (!this.canvas) {
             throw new Error(`Canvas не найден: id="${id}", canvas=${providedCanvas}`);
         }
 
-        // Устанавливаем размеры canvas
         this.canvas.width = width;
         this.canvas.height = height;
         this.context = this.canvas.getContext('2d');
 
-        // Привязка событий
         this.canvas.addEventListener('wheel', callbacks.wheel);
         this.canvas.addEventListener('mousemove', callbacks.mousemove);
         this.canvas.addEventListener('mouseup', callbacks.mouseup);
@@ -28,7 +25,6 @@ class Canvas {
         this.canvas.addEventListener('mouseleave', callbacks.mouseleave);
     }
 
-    // Методы для преобразования координат
     xs(x) {
         return this.canvas.width * (x - this.WIN.LEFT) / this.WIN.WIDTH;
     }

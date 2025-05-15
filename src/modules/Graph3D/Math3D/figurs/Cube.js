@@ -6,20 +6,37 @@ import Polygon from '../entities/Polygon';
 
 
 class Cube extends Figure{
-    constructor(size=10){
+    constructor(size = 5) {
         super();
-        this.points=[
-            new Point(-size,size,size),
-            new Point(size,size,size),
-            new Point(size,-size,size),
-            new Point(-size,-size,size),
+        this._size = size;
+        this.points = [];
+        this.edges = [];
+        this.polygons = [];
+        this.updateGeometry();
+    }
+
+    get size() {
+        return this._size;
+    }
+
+    set size(value) {
+        this._size = value;
+        this.updateGeometry();
+    }
+
+    updateGeometry() {
+        const size = this._size;
+        this.points = [
+            new Point(-size, size, size),
+            new Point(size, size, size),
+            new Point(size, -size, size),
+            new Point(-size, -size, size),
             new Point(-size, size, -size),
             new Point(size, size, -size),
             new Point(size, -size, -size),
             new Point(-size, -size, -size)
-        ]
-
-        this.edges=[
+        ];
+        this.edges = [
             new Edge(0, 1),
             new Edge(0, 3),
             new Edge(0, 4),
@@ -32,7 +49,7 @@ class Cube extends Figure{
             new Edge(5, 6),
             new Edge(5, 4),
             new Edge(2, 6)
-        ]
+        ];
 
         this.polygons=[
             new Polygon([0, 1, 2, 3], '#ff0000'),
@@ -41,8 +58,25 @@ class Cube extends Figure{
             new Polygon([1, 2, 6, 5], '#15ff00'),
             new Polygon([2, 3, 7, 6], '#ea00ff'),
             new Polygon([4, 5, 6, 7], '#fbff00')
-        ]
+        ];
     }
+
+     settings() {
+        return (
+            <div>
+                <label>
+                    Размер:
+                    <input
+                        type="number"
+                        defaultValue={this.size}
+                        onChange={(e) => {
+                            this.size = parseInt(e.target.value);
+                        }}
+                    />
+                </label>
+            </div>
+        );
+     }
 }
 
 export default Cube;

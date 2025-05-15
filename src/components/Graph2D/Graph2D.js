@@ -1,96 +1,110 @@
-import React from 'react';
-import {Graph2DLogic} from '../../modules/Graph2D/Graph2D';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Graph2DLogic } from '../../modules/Graph2D/Graph2D';
 import Canvas from '../../modules/Canvas/Canvas';
 
-class Graph2D extends React.Component {
-    constructor(props) {
-        super(props);
-        this.canvasRef = React.createRef();
-        this.logic = null;
-        this.WIN = {
-            LEFT: -10,
-            BOTTOM: -10,
-            WIDTH: 20,
-            HEIGHT: 20
-        };
-        this.state = { functions: [] };
-    }
+const Graph2D = () => {
+    const canvasRef = useRef(null);
+    const logicRef = useRef(null);
+    const [functions, setFunctions] = useState([]);
+    
+    const WIN = useRef({
+        LEFT: -10,
+        BOTTOM: -10,
+        WIDTH: 20,
+        HEIGHT: 20
+    }).current;
 
-    componentDidMount() {
+    // Инициализация canvas и логики
+    useEffect(() => {
         const canvasInstance = new Canvas({
-            WIN: this.WIN,
+            WIN,
             id: 'graphCanvas',
             width: 600,
             height: 600,
             callbacks: {
-                wheel: e => this.logic.handleWheel(e),
-                mousemove: e => this.logic.handleMouseMove(e),
-                mouseup: () => this.logic.handleMouseUp(),
-                mousedown: () => this.logic.handleMouseDown(),
-                mouseleave: () => this.logic.handleMouseLeave()
+                wheel: e => logicRef.current.handleWheel(e),
+                mousemove: e => logicRef.current.handleMouseMove(e),
+                mouseup: () => logicRef.current.handleMouseUp(),
+                mousedown: () => logicRef.current.handleMouseDown(),
+                mouseleave: () => logicRef.current.handleMouseLeave()
             }
         });
 
-        this.logic = new Graph2DLogic(this.WIN, canvasInstance);
-        this.forceUpdate();
-    }
+        logicRef.current = new Graph2DLogic(WIN, canvasInstance);
+    }, [WIN]);
 
-    addFunction = () => {
-        const num = this.state.functions.length;
-        this.setState({ 
-            functions: [...this.state.functions, { id: num, expr: '', color: '#0000ff' }]
-        });
-    };
+    // Добавление новой функции
+    const addFunction = useCallback(() => {
+        const num = functions.length;
+        setFunctions(prev => [
+            ...prev, 
+            { id: num, expr: '', color: '#0000ff' }
+        ]);
+    }, [functions.length]);
 
-    updateFunction = (id, expr, color) => {
+    // Обновление функции
+    const updateFunction = useCallback((id, expr, color) => {
         try {
             const f = new Function('x', `return ${expr}`);
-            this.logic.addFunction(f, id, color);
-            this.logic.render();
+            logicRef.current.addFunction(f, id, color);
+            logicRef.current.render();
         } catch(e) {
             console.error('Некорректная функция:', e);
         }
-    };
+    }, []);
 
-    renderControls() {
-        return this.state.functions.map(func => (
+    // Удаление функции
+    const delFunction = useCallback((id) => {
+        logicRef.current.delFunction(id);
+        setFunctions(prev => prev.filter(f => f.id !== id));
+    }, []);
+
+    // Рендер элементов управления функциями
+    const renderControls = useCallback(() => (
+        functions.map(func => (
             <div key={func.id} className="function-control">
                 <input
                     placeholder="f(x)"
-                    onChange={e => this.updateFunction(func.id, e.target.value, func.color)}
+                    onChange={e => updateFunction(
+                        func.id, 
+                        e.target.value, 
+                        func.color
+                    )}
                 />
                 <input
                     type="color"
                     value={func.color}
-                    onChange={e => this.updateFunction(func.id, func.expr, e.target.value)}
+                    onChange={e => updateFunction(
+                        func.id, 
+                        func.expr, 
+                        e.target.value
+                    )}
                 />
-                <button onClick={() => this.logic.delFunction(func.id)}>
+                <button onClick={() => delFunction(func.id)}>
                     Удалить
                 </button>
             </div>
-        ));
-    }
+        ))
+    ), [functions, updateFunction, delFunction]);
 
-    render() {
-        return (
-            <div className="graph-2d">
-                <canvas 
-                    id="graphCanvas"
-                    ref={this.canvasRef}
-                    width={600}
-                    height={600}
-                    style={{ border: '1px solid #ddd' }}
-                />
-                
-                <div className="controls">
-                    <button onClick={this.addFunction} className="add-btn">
-                        + Добавить функцию
-                    </button>
-                    {this.renderControls()}
-                </div>
+    return (
+        <div className="graph-2d">
+            <canvas 
+                id="graphCanvas"
+                ref={canvasRef}
+                width={600}
+                height={600}
+                style={{ border: '1px solid #ddd' }}
+            />
+            
+            <div className="controls">
+                <button onClick={addFunction} className="add-btn">
+                    + Добавить функцию
+                </button>
+                {renderControls()}
             </div>
-        );
-    }
-}
+        </div>
+    );
+};
 
 export default Graph2D;
