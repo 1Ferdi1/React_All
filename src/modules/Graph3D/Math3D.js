@@ -4,10 +4,6 @@ class Math3D {
     constructor({ WIN }) {
         this.WIN = WIN;
     }
-
-    // ====================================================
-    // Основные геометрические вычисления
-    // ====================================================
     
     calcCenter(figure) {
         const points = figure.points;
@@ -23,10 +19,6 @@ class Math3D {
         figure.center.y /= numPoints;
         figure.center.z /= numPoints;
     }
-
-    // ====================================================
-    // Проекции и трансформации
-    // ====================================================
     
     xs(point) {
         const zs = this.WIN.CENTER.z;
@@ -53,10 +45,6 @@ class Math3D {
         }
         return c;
     }
-
-    // ====================================================
-    // Преобразования фигур
-    // ====================================================
     
      zoom(delta,point){
         const array=this.multMatrix([
@@ -116,11 +104,6 @@ class Math3D {
         point.y = array[1];
         point.z = array[2];
     }
-
-    // ====================================================
-    // Алгоритмы визуализации
-    // ====================================================
-    
     calcDistance(figure, camera, name) {
         figure.polygons.forEach(polygon => {
             let x = 0, y = 0, z = 0;
@@ -143,11 +126,6 @@ class Math3D {
     sortByArtistAlgorithm(polygons) {
         polygons.sort((a, b) => b.distance - a.distance);
     }
-
-    // ====================================================
-    // Освещение и тени
-    // ====================================================
-    
     calcIllumination(distance, lumen) {
         const illum = distance ? lumen / distance ** 3 : 1;
         return illum > 1 ? 1 : illum;
@@ -179,10 +157,6 @@ class Math3D {
         }
         return { isShadow: false };
     }
-
-    // ====================================================
-    // Вспомогательные методы
-    // ====================================================
     
     calcVector(a, b) {
         if (!a || !b) return { x: 0, y: 0, z: 0 };
@@ -208,7 +182,7 @@ class Math3D {
     calcRadius(figure) {
         figure.polygons.forEach(polygon => {
             let points = polygon.points.map(index => figure.points[index]);
-            if (points.some(p => !p)) return; // пропускаем, если есть undefined
+            if (points.some(p => !p)) return;
 
             if (!polygon.center) {
                 const center = new Point(0, 0, 0);

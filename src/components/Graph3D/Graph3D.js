@@ -8,6 +8,15 @@ import Canvas from '../../modules/Canvas/Canvas';
 import Light from '../../modules/Graph3D/Math3D/entities/Light';
 import Torus from '../../modules/Graph3D/Math3D/figurs/Torus';
 import LightController from '../../modules/Graph3D/Math3D/entities/LightController';
+import Ellipsoid from '../../modules/Graph3D/Math3D/figurs/Ellipsoid';
+import EllipticalCylinder from '../../modules/Graph3D/Math3D/figurs/EllipticalCylinder';
+import EllipticalParaboloid from '../../modules/Graph3D/Math3D/figurs/EllipticalParaboloid';
+import Hyperboliccylinder from '../../modules/Graph3D/Math3D/figurs/Hyperboliccylinder';
+import HyperbolicParaboloid from '../../modules/Graph3D/Math3D/figurs/HyperbolicParaboloid';
+import OneSheetedHyperboloid from '../../modules/Graph3D/Math3D/figurs/OneSheetedHyperboloid';
+import ParabolicCylinder from '../../modules/Graph3D/Math3D/figurs/ParabolicCylinder';
+import TwoSheetedHyperboloid from '../../modules/Graph3D/Math3D/figurs/TwoSheetedHyperboloid';
+
 
 const Graph3D = () => {
     const [printPolygons, setPrintPolygons] = useState(true);
@@ -40,6 +49,15 @@ const Graph3D = () => {
         cylinder: () => new Cylinder(),
         sphere: () => new Sphere(),
         torus: () => new Torus(),
+        ellipsoid: () => new Ellipsoid(),
+        ellipticalCylinder: () => new EllipticalCylinder(),
+        ellipticalParaboloid: () => new EllipticalParaboloid(),
+        hyperboliccylinder: () => new Hyperboliccylinder(),
+        hyperbolicParaboloid: () => new HyperbolicParaboloid(),
+        oneSheetedHyperboloid: () => new OneSheetedHyperboloid(),
+        parabolicCylinder: () => new ParabolicCylinder(),
+        twoSheetedHyperboloid: () => new TwoSheetedHyperboloid(),
+
     }).current;
 
     const mainCanvas = useRef(null);
@@ -295,6 +313,14 @@ const Graph3D = () => {
                         <option value="cylinder">Цилиндр</option>
                         <option value="sphere">Сфера</option>
                         <option value="torus">Тор</option>
+                        <option value="ellipsoid">Эллипсоид</option>
+                        <option value="ellipticalCylinder">Эллиптический Цилиндр</option>
+                        <option value="ellipticalParaboloid">Эллиптический Параболойд</option>
+                        <option value="hyperboliccylinder">Гиперболический Цилиндр</option>
+                        <option value="hyperbolicParaboloid">Гиперболический Параболойд</option>
+                        <option value="oneSheetedHyperboloid">Однополосный Гиперболойд</option>
+                        <option value="parabolicCylinder">Параболический Цилиндр</option>
+                        <option value="twoSheetedHyperboloid">Двухполосный Гиперболойд</option>
                     </select>
                 </div>
 

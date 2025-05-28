@@ -1,45 +1,88 @@
-// LightController.jsx
-import React from 'react';
-
-const LightController = ({ lightPower, onChange }) => (
+const LightController = ({ lightPower, onChange }) => {
+  const percentage = (lightPower / 1000000) * 100;
+  return (
     <div style={{
-        margin: '10px 0',
-        padding: 5,
-        backgroundColor: '#f5f5f5',
-        borderRadius: 6,
-        width: 180,
-        fontSize: 12
+      margin: '10px 0',
+      padding: 5,
+      backgroundColor: '#f5f5f5',
+      borderRadius: 6,
+      width: 220,
+      fontSize: 12
     }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ minWidth: 70 }}>Освещение:</span>
-            <input
-                type="range"
-                min="0"
-                max="10000"
-                step="1"
-                value={lightPower}
-                onChange={e => onChange(Number(e.target.value))}
-                style={{ 
-                    flexGrow: 1,
-                    height: 4,
-                    cursor: 'pointer',
-                    background: `linear-gradient(90deg, 
-                        rgb(0, 255, 21) ${(lightPower/10000 * 100)}%, 
-                        #eee ${(lightPower/10000 * 100)}%)`,
-                    borderRadius: 4,
-                    appearance: 'none'
-                }}
-            />
-            <span style={{ 
-                minWidth: 40,
-                marginLeft: 6,
-                fontFamily: 'monospace',
-                fontSize: 12
-            }}>
-                {lightPower}
-            </span>
-        </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ minWidth: 80 }}>Источник света:</span>
+        <input
+          type="range"
+          min="0"
+          max="1000000"
+          step="1"
+          value={lightPower}
+          onChange={e => onChange(Number(e.target.value))}
+          style={{
+            flexGrow: 1,
+            height: 8,
+            cursor: 'pointer',
+            borderRadius: 4,
+            background: `linear-gradient(90deg, #00ff15 ${percentage}%, #ddd ${percentage}%)`,
+            appearance: 'none',
+            WebkitAppearance: 'none',
+            MozAppearance: 'none',
+            outline: 'none',
+          }}
+        />
+        <span style={{
+          minWidth: 50,
+          marginLeft: 6,
+          fontFamily: 'monospace',
+          fontSize: 12,
+          textAlign: 'right'
+        }}>
+          {lightPower.toLocaleString()}
+        </span>
+
+      </label>
+
+      <style>{`
+        input[type="range"]::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 18px;
+          height: 18px;
+          background: #00ff15;
+          border-radius: 50%;
+          cursor: pointer;
+          border: 2px solid #008f0a;
+          margin-top: -5px; /* Центрирование бегунка по высоте */
+          transition: background-color 0.3s ease;
+        }
+        input[type="range"]:hover::-webkit-slider-thumb {
+          background: #00cc12;
+        }
+        input[type="range"]::-moz-range-thumb {
+          width: 18px;
+          height: 18px;
+          background: #00ff15;
+          border-radius: 50%;
+          cursor: pointer;
+          border: 2px solid #008f0a;
+          transition: background-color 0.3s ease;
+        }
+        input[type="range"]:hover::-moz-range-thumb {
+          background: #00cc12;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+          height: 8px;
+          border-radius: 4px;
+          background: transparent;
+        }
+        input[type="range"]::-moz-range-track {
+          height: 8px;
+          border-radius: 4px;
+          background: transparent;
+        }
+      `}</style>
     </div>
-);
+  );
+};
 
 export default LightController;
