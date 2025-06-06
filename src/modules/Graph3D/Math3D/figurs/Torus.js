@@ -4,10 +4,9 @@ import Point from '../entities/Point';
 import Polygon from '../entities/Polygon';
 
 class Torus extends Figure {
-    constructor(radialSegments = 20, tubeSegments = 10, radius = 10, tubeRadius = 3) {
+    constructor(count = 20, radius = 10, tubeRadius = 3) {
         super();
-        this._radialSegments = radialSegments;
-        this._tubeSegments = tubeSegments;
+        this._count = count;
         this._radius = radius;
         this._tubeRadius = tubeRadius;
         this.points = [];
@@ -17,21 +16,12 @@ class Torus extends Figure {
         this.generateGeometry();
     }
 
-    get radialSegments() {
-        return this._radialSegments;
+    get count() {
+        return this._count;
     }
 
-    set radialSegments(value) {
-        this._radialSegments = Math.max(3, Math.floor(value));
-        this.generateGeometry();
-    }
-
-    get tubeSegments() {
-        return this._tubeSegments;
-    }
-
-    set tubeSegments(value) {
-        this._tubeSegments = Math.max(3, Math.floor(value));
+    set count(value) {
+        this._count = Math.max(3, Math.floor(value));
         this.generateGeometry();
     }
 
@@ -63,16 +53,15 @@ class Torus extends Figure {
     }
 
     generatePoints() {
-        const radialStep = (2 * Math.PI) / this._radialSegments;
-        const tubeStep = (2 * Math.PI) / this._tubeSegments;
+        const step = (2 * Math.PI) / this._count;
 
-        for (let r = 0; r < this._radialSegments; r++) {
-            const radialAngle = r * radialStep;
+        for (let r = 0; r < this._count; r++) {
+            const radialAngle = r * step;
             const cosRadial = Math.cos(radialAngle);
             const sinRadial = Math.sin(radialAngle);
             
-            for (let t = 0; t < this._tubeSegments; t++) {
-                const tubeAngle = t * tubeStep;
+            for (let t = 0; t < this._count; t++) {
+                const tubeAngle = t * step;
                 const cosTube = Math.cos(tubeAngle);
                 const sinTube = Math.sin(tubeAngle);
                 
@@ -86,33 +75,33 @@ class Torus extends Figure {
     }
 
     generateEdges() {
-        for (let r = 0; r < this._radialSegments; r++) {
-            const ringStart = r * this._tubeSegments;
-            for (let t = 0; t < this._tubeSegments; t++) {
+        for (let r = 0; r < this._count; r++) {
+            const ringStart = r * this._count;
+            for (let t = 0; t < this._count; t++) {
                 this.edges.push(new Edge(
                     ringStart + t,
-                    ringStart + (t + 1) % this._tubeSegments
+                    ringStart + (t + 1) % this._count
                 ));
             }
         }
 
-        for (let t = 0; t < this._tubeSegments; t++) {
-            for (let r = 0; r < this._radialSegments; r++) {
+        for (let t = 0; t < this._count; t++) {
+            for (let r = 0; r < this._count; r++) {
                 this.edges.push(new Edge(
-                    r * this._tubeSegments + t,
-                    ((r + 1) % this._radialSegments) * this._tubeSegments + t
+                    r * this._count + t,
+                    ((r + 1) % this._count) * this._count + t
                 ));
             }
         }
     }
 
     generatePolygons() {
-        for (let r = 0; r < this._radialSegments; r++) {
-            for (let t = 0; t < this._tubeSegments; t++) {
-                const a = r * this._tubeSegments + t;
-                const b = r * this._tubeSegments + (t + 1) % this._tubeSegments;
-                const c = ((r + 1) % this._radialSegments) * this._tubeSegments + (t + 1) % this._tubeSegments;
-                const d = ((r + 1) % this._radialSegments) * this._tubeSegments + t;
+        for (let r = 0; r < this._count; r++) {
+            for (let t = 0; t < this._count; t++) {
+                const a = r * this._count + t;
+                const b = r * this._count + (t + 1) % this._count;
+                const c = ((r + 1) % this._count) * this._count + (t + 1) % this._count;
+                const d = ((r + 1) % this._count) * this._count + t;
                 
                 this.polygons.push(new Polygon([a, b, c, d], '#00FF00'));
             }
@@ -124,23 +113,13 @@ class Torus extends Figure {
         return (
             <div>
                 <label>
-                    Радиальные сегменты:
+                    Детализация:
                     <input
                         type="number"
                         min="3"
                         step="1"
-                        value={this.radialSegments}
-                        onChange={e => this.radialSegments = parseInt(e.target.value, 10)}
-                    />
-                </label>
-                <label>
-                    Сегменты трубки:
-                    <input
-                        type="number"
-                        min="3"
-                        step="1"
-                        value={this.tubeSegments}
-                        onChange={e => this.tubeSegments = parseInt(e.target.value, 10)}
+                        value={this.count}
+                        onChange={e => this.count = parseInt(e.target.value, 10)}
                     />
                 </label>
                 <label>

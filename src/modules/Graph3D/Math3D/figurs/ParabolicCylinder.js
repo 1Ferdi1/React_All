@@ -4,94 +4,64 @@ import Point from '../entities/Point';
 import Polygon from '../entities/Polygon';
 
 class ParabolicCylinder extends Figure {
-    constructor(
-        xSegments = 20,
-        zSegments = 20,
-        size = 5
-    ) {
+    constructor(count = 20, size = 5) {
         super();
-        this._xSegments = Math.max(2, Math.floor(xSegments));
-        this._zSegments = Math.max(2, Math.floor(zSegments));
-        this._size = Math.max(0.1, size);
+        this.count = Math.max(2, Math.floor(count));
+        this.size = Math.max(0.1, size);
 
         this.points = [];
         this.edges = [];
         this.polygons = [];
 
-        this.generateGeometry();
+        this.updateGeometry();
     }
 
-    get xSegments() { return this._xSegments; }
-    set xSegments(value) {
-        this._xSegments = Math.max(2, Math.floor(value));
-        this.generateGeometry();
-    }
-
-    get zSegments() { return this._zSegments; }
-    set zSegments(value) {
-        this._zSegments = Math.max(2, Math.floor(value));
-        this.generateGeometry();
-    }
-
-    get size() { return this._size; }
-    set size(value) {
-        this._size = Math.max(0.1, value);
-        this.generateGeometry();
-    }
-
-    generateGeometry() {
+    updateGeometry() {
         this.points = [];
         this.edges = [];
         this.polygons = [];
-        this.generatePoints();
-        this.generateEdges();
-        this.generatePolygons();
-    }
 
-    generatePoints() {
-        // x ∈ [-size, size], z ∈ [-size, size]
-        const xStep = (2 * this._size) / (this._xSegments - 1);
-        const zStep = (2 * this._size) / (this._zSegments - 1);
+        const step = (2 * this.size) / this.count;
 
-        for (let i = 0; i < this._xSegments; i++) {
-            const x = -this._size + i * xStep;
-            const y = (x * x) / this._size;
-            for (let j = 0; j < this._zSegments; j++) {
-                const z = -this._size + j * zStep;
+        // Генерация точек
+        for (let i = 0; i <= this.count; i++) {
+            const x = -this.size + i * step;
+            const y = (x * x) / this.size;
+            for (let j = 0; j <= this.count; j++) {
+                const z = -this.size + j * step;
                 this.points.push(new Point(x, y, z));
             }
         }
-    }
 
-    generateEdges() {
-        // Вдоль x (по z)
-        for (let i = 0; i < this._xSegments; i++) {
-            for (let j = 0; j < this._zSegments; j++) {
-                const idx = i * this._zSegments + j;
-                // Вдоль z
-                if (j < this._zSegments - 1) {
-                    this.edges.push(new Edge(idx, idx + 1));
-                }
-                // Вдоль x
-                if (i < this._xSegments - 1) {
-                    this.edges.push(new Edge(idx, idx + this._zSegments));
-                }
+        const pointsPerRow = this.count + 1;
+
+        // Генерация рёбер
+        for (let i = 0; i <= this.count; i++) {
+            for (let j = 0; j < this.count; j++) {
+                const current = i * pointsPerRow + j;
+                const next = current + 1;
+                this.edges.push(new Edge(current, next));
             }
         }
-    }
-
-    generatePolygons() {
-        for (let i = 0; i < this._xSegments - 1; i++) {
-            for (let j = 0; j < this._zSegments - 1; j++) {
-                const idx = i * this._zSegments + j;
-                this.polygons.push(new Polygon([
-                    idx,
-                    idx + 1,
-                    idx + 1 + this._zSegments,
-                    idx + this._zSegments
-                ], '#00BFFF'));
+        for (let j = 0; j <= this.count; j++) {
+            for (let i = 0; i < this.count; i++) {
+                const current = i * pointsPerRow + j;
+                const next = (i + 1) * pointsPerRow + j;
+                this.edges.push(new Edge(current, next));
             }
         }
+
+        // Генерация полигонов
+        for (let i = 0; i < this.count; i++) {
+            for (let j = 0; j < this.count; j++) {
+                const a = i * pointsPerRow + j;
+                const b = i * pointsPerRow + j + 1;
+                const c = (i + 1) * pointsPerRow + j + 1;
+                const d = (i + 1) * pointsPerRow + j;
+                this.polygons.push(new Polygon([a, b, c, d], '#00BFFF'));
+            }
+        }
+
         this.setIndexPolygons();
     }
 
@@ -99,23 +69,15 @@ class ParabolicCylinder extends Figure {
         return (
             <div>
                 <label>
-                    Сегменты по X:
+                    Детализация:
                     <input
                         type="number"
                         min="2"
-                        step="1"
-                        value={this.xSegments}
-                        onChange={e => this.xSegments = parseInt(e.target.value, 10)}
-                    />
-                </label>
-                <label>
-                    Сегменты по Z:
-                    <input
-                        type="number"
-                        min="2"
-                        step="1"
-                        value={this.zSegments}
-                        onChange={e => this.zSegments = parseInt(e.target.value, 10)}
+                        value={this.count}
+                        onChange={e => {
+                            this.count = parseInt(e.target.value, 10) || 2;
+                            this.updateGeometry();
+                        }}
                     />
                 </label>
                 <label>
@@ -125,7 +87,10 @@ class ParabolicCylinder extends Figure {
                         min="0.1"
                         step="0.1"
                         value={this.size}
-                        onChange={e => this.size = parseFloat(e.target.value)}
+                        onChange={e => {
+                            this.size = parseFloat(e.target.value) || 0.1;
+                            this.updateGeometry();
+                        }}
                     />
                 </label>
             </div>

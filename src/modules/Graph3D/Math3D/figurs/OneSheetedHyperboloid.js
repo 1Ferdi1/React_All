@@ -5,131 +5,83 @@ import Polygon from '../entities/Polygon';
 
 class OneSheetedHyperboloid extends Figure {
     constructor(
-        radialSegments = 32,
-        heightSegments = 20,
+        count = 20,
         a = 1,
         b = 1,
         c = 1,
-        heightScale = 1.5 // Лучше использовать масштаб высоты, а не угол
+        heightScale = 1.5
     ) {
         super();
-        this._radialSegments = Math.max(3, Math.floor(radialSegments));
-        this._heightSegments = Math.max(2, Math.floor(heightSegments));
-        this._a = Math.max(0.1, a);
-        this._b = Math.max(0.1, b);
-        this._c = Math.max(0.1, c);
-        this._heightScale = Math.max(0.1, heightScale);
+        this.count = Math.max(3, Math.floor(count));
+        this.a = Math.max(0.1, a);
+        this.b = Math.max(0.1, b);
+        this.c = Math.max(0.1, c);
+        this.heightScale = Math.max(0.1, heightScale);
 
         this.points = [];
         this.edges = [];
         this.polygons = [];
 
-        this.generateGeometry();
+        this.updateGeometry();
     }
 
-    // Геттеры и сеттеры с валидацией
-    get radialSegments() { return this._radialSegments; }
-    set radialSegments(value) {
-        this._radialSegments = Math.max(3, Math.floor(value));
-        this.generateGeometry();
-    }
-
-    get heightSegments() { return this._heightSegments; }
-    set heightSegments(value) {
-        this._heightSegments = Math.max(2, Math.floor(value));
-        this.generateGeometry();
-    }
-
-    get a() { return this._a; }
-    set a(value) {
-        this._a = Math.max(0.1, value);
-        this.generateGeometry();
-    }
-
-    get b() { return this._b; }
-    set b(value) {
-        this._b = Math.max(0.1, value);
-        this.generateGeometry();
-    }
-
-    get c() { return this._c; }
-    set c(value) {
-        this._c = Math.max(0.1, value);
-        this.generateGeometry();
-    }
-
-    get heightScale() { return this._heightScale; }
-    set heightScale(value) {
-        this._heightScale = Math.max(0.1, value);
-        this.generateGeometry();
-    }
-
-    generateGeometry() {
+    updateGeometry() {
         this.points = [];
         this.edges = [];
         this.polygons = [];
-        this.generatePoints();
-        this.generateEdges();
-        this.generatePolygons();
-    }
 
-    generatePoints() {
-        const uStep = (2 * Math.PI) / this._radialSegments;
-        const vMin = -this._heightScale;
-        const vMax = this._heightScale;
-        const vStep = (vMax - vMin) / (this._heightSegments - 1);
+        const uStep = (2 * Math.PI) / this.count;
+        const vMin = -this.heightScale;
+        const vMax = this.heightScale;
+        const vStep = (vMax - vMin) / this.count;
 
-        for (let i = 0; i < this._heightSegments; i++) {
+        // Генерация точек
+        for (let i = 0; i <= this.count; i++) {
             const v = vMin + i * vStep;
             const coshV = Math.cosh(v);
             const sinhV = Math.sinh(v);
 
-            for (let j = 0; j < this._radialSegments; j++) {
+            for (let j = 0; j <= this.count; j++) {
                 const u = j * uStep;
-                const x = this._a * coshV * Math.cos(u);
-                const y = this._c * sinhV;
-                const z = this._b * coshV * Math.sin(u);
+                const x = this.a * coshV * Math.cos(u);
+                const y = this.c * sinhV;
+                const z = this.b * coshV * Math.sin(u);
                 this.points.push(new Point(x, y, z));
             }
         }
-    }
 
-    generateEdges() {
-        // Горизонтальные ребра (кольца)
-        for (let i = 0; i < this._heightSegments; i++) {
-            const ringStart = i * this._radialSegments;
-            for (let j = 0; j < this._radialSegments; j++) {
-                this.edges.push(new Edge(
-                    ringStart + j,
-                    ringStart + (j + 1) % this._radialSegments
-                ));
+        const pointsPerRow = this.count + 1;
+
+        // Горизонтальные рёбра
+        for (let i = 0; i <= this.count; i++) {
+            for (let j = 0; j < this.count; j++) {
+                const current = i * pointsPerRow + j;
+                const next = current + 1;
+                this.edges.push(new Edge(current, next));
             }
         }
-        // Вертикальные ребра (меридианы)
-        for (let j = 0; j < this._radialSegments; j++) {
-            for (let i = 0; i < this._heightSegments - 1; i++) {
-                this.edges.push(new Edge(
-                    i * this._radialSegments + j,
-                    (i + 1) * this._radialSegments + j
-                ));
+
+        // Вертикальные рёбра
+        for (let j = 0; j <= this.count; j++) {
+            for (let i = 0; i < this.count; i++) {
+                const current = i * pointsPerRow + j;
+                const next = (i + 1) * pointsPerRow + j;
+                this.edges.push(new Edge(current, next));
             }
         }
-    }
 
-    generatePolygons() {
-        for (let i = 0; i < this._heightSegments - 1; i++) {
-            for (let j = 0; j < this._radialSegments; j++) {
-                const current = i * this._radialSegments + j;
-                const next = i * this._radialSegments + (j + 1) % this._radialSegments;
-                const below = (i + 1) * this._radialSegments + j;
-                const belowNext = (i + 1) * this._radialSegments + (j + 1) % this._radialSegments;
+        // Генерация полигонов
+        for (let i = 0; i < this.count; i++) {
+            for (let j = 0; j < this.count; j++) {
+                const a = i * pointsPerRow + j;
+                const b = i * pointsPerRow + j + 1;
+                const c = (i + 1) * pointsPerRow + j + 1;
+                const d = (i + 1) * pointsPerRow + j;
 
-                this.polygons.push(new Polygon(
-                    [current, next, belowNext, below],
-                    '#00FF00'
-                ));
+                this.polygons.push(new Polygon([a, b, c, d], '#00FF00'));
             }
         }
+
         this.setIndexPolygons();
     }
 
@@ -137,23 +89,15 @@ class OneSheetedHyperboloid extends Figure {
         return (
             <div>
                 <label>
-                    Радиальные сегменты:
+                    Детализация:
                     <input
                         type="number"
                         min="3"
-                        step="1"
-                        value={this.radialSegments}
-                        onChange={e => this.radialSegments = parseInt(e.target.value, 10)}
-                    />
-                </label>
-                <label>
-                    Вертикальные сегменты:
-                    <input
-                        type="number"
-                        min="2"
-                        step="1"
-                        value={this.heightSegments}
-                        onChange={e => this.heightSegments = parseInt(e.target.value, 10)}
+                        value={this.count}
+                        onChange={e => {
+                            this.count = parseInt(e.target.value) || 3;
+                            this.updateGeometry();
+                        }}
                     />
                 </label>
                 <label>
@@ -163,7 +107,10 @@ class OneSheetedHyperboloid extends Figure {
                         min="0.1"
                         step="0.1"
                         value={this.a}
-                        onChange={e => this.a = parseFloat(e.target.value)}
+                        onChange={e => {
+                            this.a = parseFloat(e.target.value) || 1;
+                            this.updateGeometry();
+                        }}
                     />
                 </label>
                 <label>
@@ -173,7 +120,10 @@ class OneSheetedHyperboloid extends Figure {
                         min="0.1"
                         step="0.1"
                         value={this.b}
-                        onChange={e => this.b = parseFloat(e.target.value)}
+                        onChange={e => {
+                            this.b = parseFloat(e.target.value) || 1;
+                            this.updateGeometry();
+                        }}
                     />
                 </label>
                 <label>
@@ -183,7 +133,10 @@ class OneSheetedHyperboloid extends Figure {
                         min="0.1"
                         step="0.1"
                         value={this.c}
-                        onChange={e => this.c = parseFloat(e.target.value)}
+                        onChange={e => {
+                            this.c = parseFloat(e.target.value) || 1;
+                            this.updateGeometry();
+                        }}
                     />
                 </label>
                 <label>
@@ -193,7 +146,10 @@ class OneSheetedHyperboloid extends Figure {
                         min="0.1"
                         step="0.1"
                         value={this.heightScale}
-                        onChange={e => this.heightScale = parseFloat(e.target.value)}
+                        onChange={e => {
+                            this.heightScale = parseFloat(e.target.value) || 1;
+                            this.updateGeometry();
+                        }}
                     />
                 </label>
             </div>

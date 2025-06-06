@@ -4,224 +4,141 @@ import Point from '../entities/Point';
 import Polygon from '../entities/Polygon';
 
 class EllipticalCylinder extends Figure {
-    constructor(
-        heightSegments = 10,
-        radialSegments = 20,
-        height = 15,
-        radiusX = 6,
-        radiusZ = 10
-    ) {
+    constructor(count = 20, height = 15, radiusX = 6, radiusZ = 10) {
         super();
-        this._heightSegments = heightSegments;
-        this._radialSegments = radialSegments;
-        this._height = height;
-        this._radiusX = radiusX;
-        this._radiusZ = radiusZ;
+        this.count = count;
+        this.height = height;
+        this.radiusX = radiusX;
+        this.radiusZ = radiusZ;
         this.points = [];
         this.edges = [];
         this.polygons = [];
         
-        this.generateGeometry();
+        this.updateGeometry();
     }
 
-    // Getters and setters
-    get heightSegments() {
-        return this._heightSegments;
-    }
-
-    set heightSegments(value) {
-        this._heightSegments = Math.max(1, Math.floor(value));
-        this.generateGeometry();
-    }
-
-    get radialSegments() {
-        return this._radialSegments;
-    }
-
-    set radialSegments(value) {
-        this._radialSegments = Math.max(3, Math.floor(value));
-        this.generateGeometry();
-    }
-
-    get height() {
-        return this._height;
-    }
-
-    set height(value) {
-        this._height = Math.max(0.1, value);
-        this.generateGeometry();
-    }
-
-    get radiusX() {
-        return this._radiusX;
-    }
-
-    set radiusX(value) {
-        this._radiusX = Math.max(0.1, value);
-        this.generateGeometry();
-    }
-
-    get radiusZ() {
-        return this._radiusZ;
-    }
-
-    set radiusZ(value) {
-        this._radiusZ = Math.max(0.1, value);
-        this.generateGeometry();
-    }
-
-    generateGeometry() {
+    updateGeometry() {
         this.points = [];
         this.edges = [];
         this.polygons = [];
-        this.generatePoints();
-        this.generateEdges();
-        this.generatePolygons();
-    }
-
-    generatePoints() {
-        const radialStep = (2 * Math.PI) / this._radialSegments;
-        const heightStep = this._height / (this._heightSegments - 1);
         
-        for (let h = 0; h < this._heightSegments; h++) {
-            const y = h * heightStep - this._height / 2; // Центрируем по Y
+        const angleStep = (2 * Math.PI) / this.count;
+        const halfHeight = this.height / 2;
+
+        // Генерация точек для нижнего и верхнего оснований
+        for (let i = 0; i < this.count; i++) {
+            const angle = i * angleStep;
+            const x = this.radiusX * Math.cos(angle);
+            const z = this.radiusZ * Math.sin(angle);
             
-            for (let r = 0; r < this._radialSegments; r++) {
-                const angle = r * radialStep;
-                const x = this._radiusX * Math.cos(angle);
-                const z = this._radiusZ * Math.sin(angle);
-                
-                this.points.push(new Point(x, y, z));
-            }
+            // Нижнее основание
+            this.points.push(new Point(x, -halfHeight, z));
+            
+            // Верхнее основание
+            this.points.push(new Point(x, halfHeight, z));
         }
-    }
 
-    generateEdges() {
-        // Горизонтальные ребра (кольца)
-        for (let h = 0; h < this._heightSegments; h++) {
-            const ringStart = h * this._radialSegments;
-            for (let r = 0; r < this._radialSegments; r++) {
-                this.edges.push(new Edge(
-                    ringStart + r,
-                    ringStart + (r + 1) % this._radialSegments
-                ));
-            }
-        }
-        
-        // Вертикальные ребра (столбцы)
-        for (let r = 0; r < this._radialSegments; r++) {
-            for (let h = 0; h < this._heightSegments - 1; h++) {
-                this.edges.push(new Edge(
-                    h * this._radialSegments + r,
-                    (h + 1) * this._radialSegments + r
-                ));
-            }
-        }
-    }
-
-    generatePolygons() {
-        for (let h = 0; h < this._heightSegments - 1; h++) {
-            for (let r = 0; r < this._radialSegments; r++) {
-                const current = h * this._radialSegments + r;
-                const next = current + 1;
-                const below = current + this._radialSegments;
-                const nextBelow = below + 1;
-                
-                this.polygons.push(new Polygon([
-                    current,
-                    next % (h * this._radialSegments + this._radialSegments),
-                    nextBelow % ((h + 1) * this._radialSegments + this._radialSegments),
-                    below
-                ], '#00FF00'));
-            }
-        }
-        
-        // Добавляем крышки
-        this.generateCaps();
-        this.setIndexPolygons();
-    }
-
-    generateCaps() {
-        // Нижняя крышка
+        // Центральные точки для крышек
         const bottomCenter = this.points.length;
-        this.points.push(new Point(0, -this._height / 2, 0));
-        
-        for (let r = 0; r < this._radialSegments; r++) {
-            const next = (r + 1) % this._radialSegments;
+        this.points.push(new Point(0, -halfHeight, 0));
+        const topCenter = this.points.length;
+        this.points.push(new Point(0, halfHeight, 0));
+
+        // Генерация рёбер
+        for (let i = 0; i < this.count; i++) {
+            // Боковые рёбра
+            this.edges.push(new Edge(2 * i, 2 * i + 1));
+            
+            // Рёбра нижнего основания
+            this.edges.push(new Edge(2 * i, 2 * ((i + 1) % this.count)));
+            
+            // Рёбра верхнего основания
+            this.edges.push(new Edge(2 * i + 1, 2 * ((i + 1) % this.count) + 1));
+            
+            // Рёбра от центров к основаниям
+            this.edges.push(new Edge(2 * i, bottomCenter));
+            this.edges.push(new Edge(2 * i + 1, topCenter));
+        }
+
+        // Генерация полигонов
+        for (let i = 0; i < this.count; i++) {
+            const next = (i + 1) % this.count;
+            
+            // Боковая поверхность
             this.polygons.push(new Polygon([
-                r,
-                next,
+                2 * i,
+                2 * next,
+                2 * next + 1,
+                2 * i + 1
+            ], '#00FF00'));
+            
+            // Нижняя крышка (треугольники)
+            this.polygons.push(new Polygon([
+                2 * i,
+                2 * next,
                 bottomCenter
             ], '#00FF00'));
-        }
-        
-        // Верхняя крышка
-        const topCenter = this.points.length;
-        this.points.push(new Point(0, this._height / 2, 0));
-        
-        const topRingStart = (this._heightSegments - 1) * this._radialSegments;
-        for (let r = 0; r < this._radialSegments; r++) {
-            const current = topRingStart + r;
-            const next = topRingStart + (r + 1) % this._radialSegments;
+            
+            // Верхняя крышка (треугольники)
             this.polygons.push(new Polygon([
-                current,
-                next,
+                2 * i + 1,
+                2 * next + 1,
                 topCenter
             ], '#00FF00'));
         }
+        
+        this.setIndexPolygons();
     }
 
     settings() {
         return (
             <div>
                 <label>
-                    Сегменты по высоте:
+                    Детализация:
                     <input
                         type="number"
-                        min="1"
-                        step="1"
-                        value={this.heightSegments}
-                        onChange={e => this.heightSegments = parseInt(e.target.value, 10)}
-                    />
-                </label>
-                <label>
-                    Радиальные сегменты:
-                    <input
-                        type="number"
+                        defaultValue={this.count}
                         min="3"
-                        step="1"
-                        value={this.radialSegments}
-                        onChange={e => this.radialSegments = parseInt(e.target.value, 10)}
+                        onChange={e => {
+                            this.count = parseInt(e.target.value) || 3;
+                            this.updateGeometry();
+                        }}
                     />
                 </label>
                 <label>
                     Высота:
                     <input
                         type="number"
+                        defaultValue={this.height}
                         min="0.1"
-                        step="0.1"
-                        value={this.height}
-                        onChange={e => this.height = parseFloat(e.target.value)}
+                        onChange={e => {
+                            this.height = parseFloat(e.target.value) || 1;
+                            this.updateGeometry();
+                        }}
                     />
                 </label>
                 <label>
                     Радиус X:
                     <input
                         type="number"
+                        defaultValue={this.radiusX}
                         min="0.1"
-                        step="0.1"
-                        value={this.radiusX}
-                        onChange={e => this.radiusX = parseFloat(e.target.value)}
+                        onChange={e => {
+                            this.radiusX = parseFloat(e.target.value) || 1;
+                            this.updateGeometry();
+                        }}
                     />
                 </label>
                 <label>
                     Радиус Z:
                     <input
                         type="number"
+                        defaultValue={this.radiusZ}
                         min="0.1"
-                        step="0.1"
-                        value={this.radiusZ}
-                        onChange={e => this.radiusZ = parseFloat(e.target.value)}
+                        onChange={e => {
+                            this.radiusZ = parseFloat(e.target.value) || 1;
+                            this.updateGeometry();
+                        }}
                     />
                 </label>
             </div>

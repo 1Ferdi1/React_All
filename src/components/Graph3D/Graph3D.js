@@ -14,7 +14,9 @@ import Hyperboliccylinder from '../../modules/Graph3D/Math3D/figurs/Hyperboliccy
 import HyperbolicParaboloid from '../../modules/Graph3D/Math3D/figurs/HyperbolicParaboloid';
 import OneSheetedHyperboloid from '../../modules/Graph3D/Math3D/figurs/OneSheetedHyperboloid';
 import ParabolicCylinder from '../../modules/Graph3D/Math3D/figurs/ParabolicCylinder';
-//import TwoSheetedHyperboloid from '../../modules/Graph3D/Math3D/figurs/TwoSheetedHyperboloid';
+import TwoSheetedHyperboloid from '../../modules/Graph3D/Math3D/figurs/TwoSheetedHyperboloid';
+import Conys from '../../modules/Graph3D/Math3D/figurs/Conys';
+import Pyramid from '../../modules/Graph3D/Math3D/figurs/Pyramid';
 
 // Глобальное состояние приложения
 const appState = {
@@ -43,7 +45,9 @@ const appState = {
         hyperbolicParaboloid: () => new HyperbolicParaboloid(),
         oneSheetedHyperboloid: () => new OneSheetedHyperboloid(),
         parabolicCylinder: () => new ParabolicCylinder(),
-        //twoSheetedHyperboloid: () => new TwoSheetedHyperboloid(),
+        twoSheetedHyperboloid: () => new TwoSheetedHyperboloid(),
+        conys: () => new Conys(),
+        pyramid: () => new Pyramid(),
     },
     WIN: {
         LEFT: -5,
@@ -395,6 +399,8 @@ class Graph3D extends Component {
                             <option value="oneSheetedHyperboloid">Однополосный Гиперболойд</option>
                             <option value="parabolicCylinder">Параболический Цилиндр</option>
                             <option value="twoSheetedHyperboloid">Двухполосный Гиперболоид</option>
+                            <option value="conys">Конус</option>
+                            <option value="pyramid">Пирамида</option>
                         </select>
                     </div>
 
