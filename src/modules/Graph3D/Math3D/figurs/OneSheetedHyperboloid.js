@@ -130,6 +130,7 @@ class OneSheetedHyperboloid extends Figure {
                 ));
             }
         }
+        this.setIndexPolygons();
     }
 
     settings() {

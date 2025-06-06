@@ -59,6 +59,7 @@ class Cube extends Figure{
             new Polygon([2, 3, 7, 6], '#ea00ff'),
             new Polygon([4, 5, 6, 7], '#fbff00')
         ];
+        this.setIndexPolygons();
     }
 
      settings() {

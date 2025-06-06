@@ -1,166 +1,113 @@
-import Figure from '../entities/Figure';
-import Edge from '../entities/Edge';
-import Point from '../entities/Point';
-import Polygon from '../entities/Polygon';
+import Point from '../entities/Point.js';
+import Polygon from '../entities/Polygon.js';
+import Edge from '../entities/Edge.js';
 
-class HyperbolicCylinder extends Figure {
-    constructor(
-        segments = 10,
-        scale = 5
-    ) {
-        super();
-        this._segments = segments;
-        this._scale = scale;
+export default class HyperbolicCylinder {
+    constructor(segments = 10, size = 5) {
+        this._segments = Math.max(3, Math.floor(segments));
+        this._size = size;
         this.points = [];
         this.edges = [];
         this.polygons = [];
-        
-        this.generateGeometry();
+        this.updateGeometry();
     }
 
-    // Геттеры и сеттеры с валидацией
     get segments() {
         return this._segments;
     }
 
     set segments(value) {
         this._segments = Math.max(3, Math.floor(value));
-        this.generateGeometry();
+        this.updateGeometry();
     }
 
-    get scale() {
-        return this._scale;
+    get size() {
+        return this._size;
     }
 
-    set scale(value) {
-        this._scale = Math.max(0.1, value);
-        this.generateGeometry();
+    set size(value) {
+        this._size = value;
+        this.updateGeometry();
     }
 
-    generateGeometry() {
+    updateGeometry() {
         this.points = [];
         this.edges = [];
         this.polygons = [];
-        this.generatePoints();
-        this.generateEdges();
-        this.generatePolygons();
+        this.generatePoints(this._segments, this._size);
+        this.generateEdges(this._segments);
+        this.generatePolygons(this._segments);
     }
 
-    generatePoints() {
-        const segments = this._segments;
-        const scale = this._scale;
-
-        // Первая часть (положительная)
-        for (let i = -segments; i < segments; i++) {
-            for (let j = 0; j < segments; j++) {
-                const x = i + scale / segments;
-                const y = x * x / scale;
-                const z = j - scale;
+    generatePoints(count, size) {
+        // Первая половина цилиндра (size положительный)
+        for (let i = -count; i < count; i++) {
+            for (let j = 0; j < count; j++) {
+                const x = i + size / count;
+                const y = (x * x) / size;
+                const z = j - size;
                 this.points.push(new Point(x, y, z));
             }
         }
 
-        // Вторая часть (отрицательная)
-        for (let i = -segments; i < segments; i++) {
-            for (let j = 0; j < segments; j++) {
-                const x = i - scale / segments;
-                const y = x * x / -scale;
-                const z = j + scale;
+        // Вторая половина цилиндра (size отрицательный)
+        size = -size;
+        for (let i = -count; i < count; i++) {
+            for (let j = 0; j < count; j++) {
+                const x = i - size / count;
+                const y = (x * x) / size;
+                const z = j + size;
                 this.points.push(new Point(x, y, z));
             }
         }
     }
 
-    generateEdges() {
-        const totalPoints = this.points.length;
-        const halfPoints = totalPoints / 2;
-        const segments = this._segments;
-        const pointsPerRow = 2 * segments;
-        
-        // Ребра для первой части
-        for (let i = 0; i < halfPoints; i++) {
-            // Горизонтальные ребра
-            if ((i + 1) % pointsPerRow !== 0) {
+    generateEdges(count) {
+        const half = this.points.length / 2;
+
+        // Первая часть
+        for (let i = 0; i < half - count; i++) {
+            if ((i + 1) % count !== 0) {
                 this.edges.push(new Edge(i, i + 1));
+            } else {
+                this.edges.push(new Edge(i, i + 1 - count));
             }
-            // Вертикальные ребра
-            if (i + pointsPerRow < halfPoints) {
-                this.edges.push(new Edge(i, i + pointsPerRow));
-            }
+            this.edges.push(new Edge(i, i + count));
         }
-        
-        // Ребра для второй части
-        for (let i = halfPoints; i < totalPoints; i++) {
-            const relativeIndex = i - halfPoints;
-            // Горизонтальные ребра
-            if ((relativeIndex + 1) % pointsPerRow !== 0) {
+
+        // Вторая часть
+        for (let i = half; i < this.points.length - count; i++) {
+            const rel = i - half;
+            if ((rel + 1) % count !== 0) {
                 this.edges.push(new Edge(i, i + 1));
+            } else {
+                this.edges.push(new Edge(i, i + 1 - count));
             }
-            // Вертикальные ребра
-            if (relativeIndex + pointsPerRow < halfPoints) {
-                this.edges.push(new Edge(i, i + pointsPerRow));
-            }
+            this.edges.push(new Edge(i, i + count));
         }
     }
 
-    generatePolygons() {
-        const totalPoints = this.points.length;
-        const halfPoints = totalPoints / 2;
-        const segments = this._segments;
-        const pointsPerRow = 2 * segments;
-        
-        // Полигоны для первой части
-        for (let i = 0; i < halfPoints - pointsPerRow; i++) {
-            if ((i + 1) % pointsPerRow !== 0) {
-                this.polygons.push(new Polygon([
-                    i,
-                    i + 1,
-                    i + 1 + pointsPerRow,
-                    i + pointsPerRow
-                ], '#00FF00'));
-            }
-        }
-        
-        // Полигоны для второй части
-        for (let i = halfPoints; i < totalPoints - pointsPerRow; i++) {
-            const relativeIndex = i - halfPoints;
-            if ((relativeIndex + 1) % pointsPerRow !== 0) {
-                this.polygons.push(new Polygon([
-                    i,
-                    i + 1,
-                    i + 1 + pointsPerRow,
-                    i + pointsPerRow
-                ], '#00FF00'));
-            }
-        }
-    }
+    generatePolygons(count) {
+        const half = this.points.length / 2;
 
-    settings() {
-        return (
-            <div>
-                <label>
-                    Количество сегментов:
-                    <input
-                        type="number"
-                        min="3"
-                        step="1"
-                        value={this.segments}
-                        onChange={e => this.segments = parseInt(e.target.value, 10)}
-                    />
-                </label>
-                <label>
-                    Масштаб:
-                    <input
-                        type="number"
-                        min="0.1"
-                        step="0.1"
-                        value={this.scale}
-                        onChange={e => this.scale = parseFloat(e.target.value)}
-                    />
-                </label>
-            </div>
-        );
+        // Первая часть
+        for (let i = 0; i < half - count; i++) {
+            if ((i + 1) % count !== 0) {
+                this.polygons.push(new Polygon([i, i + 1, i + 1 + count, i + count]));
+            } else {
+                this.polygons.push(new Polygon([i, i + 1 - count, i + 1, i + count]));
+            }
+        }
+
+        // Вторая часть
+        for (let i = half; i < this.points.length - count; i++) {
+            const rel = i - half;
+            if ((rel + 1) % count !== 0) {
+                this.polygons.push(new Polygon([i, i + 1, i + 1 + count, i + count]));
+            } else {
+                this.polygons.push(new Polygon([i, i + 1 - count, i + 1, i + count]));
+            }
+        }
+        this.setIndexPolygons();
     }
 }
-
-export default HyperbolicCylinder;

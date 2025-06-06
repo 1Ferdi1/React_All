@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { Component } from 'react';
 import Point from '../../modules/Graph3D/Math3D/entities/Point';
 import Cube from '../../modules/Graph3D/Math3D/figurs/Cube';
 import Cylinder from '../../modules/Graph3D/Math3D/figurs/Cylinder';
@@ -7,7 +7,6 @@ import Math3D from '../../modules/Graph3D/Math3D';
 import Canvas from '../../modules/Canvas/Canvas';
 import Light from '../../modules/Graph3D/Math3D/entities/Light';
 import Torus from '../../modules/Graph3D/Math3D/figurs/Torus';
-import LightController from '../../modules/Graph3D/Math3D/entities/LightController';
 import Ellipsoid from '../../modules/Graph3D/Math3D/figurs/Ellipsoid';
 import EllipticalCylinder from '../../modules/Graph3D/Math3D/figurs/EllipticalCylinder';
 import EllipticalParaboloid from '../../modules/Graph3D/Math3D/figurs/EllipticalParaboloid';
@@ -15,36 +14,24 @@ import Hyperboliccylinder from '../../modules/Graph3D/Math3D/figurs/Hyperboliccy
 import HyperbolicParaboloid from '../../modules/Graph3D/Math3D/figurs/HyperbolicParaboloid';
 import OneSheetedHyperboloid from '../../modules/Graph3D/Math3D/figurs/OneSheetedHyperboloid';
 import ParabolicCylinder from '../../modules/Graph3D/Math3D/figurs/ParabolicCylinder';
-import TwoSheetedHyperboloid from '../../modules/Graph3D/Math3D/figurs/TwoSheetedHyperboloid';
+//import TwoSheetedHyperboloid from '../../modules/Graph3D/Math3D/figurs/TwoSheetedHyperboloid';
 
-
-const Graph3D = () => {
-    const [printPolygons, setPrintPolygons] = useState(true);
-    const [printPoints, setPrintPoints] = useState(true);
-    const [printEdges, setPrintEdges] = useState(true);
-    const [fps, setFps] = useState(0);
-    const [lightPower, setLightPower] = useState(2500);
-    const [selectedFigure, setSelectedFigure] = useState('cube');
-    const [renderCount, setRenderCount] = useState(0);
-    
-    const lightPowerRef = useRef(lightPower);
-    useEffect(() => {
-        lightPowerRef.current = lightPower;
-        WIN.LIGHT.lumen = lightPower;
-    }, [lightPower]);
-
-    const WIN = useRef({
-        LEFT: -5,
-        BOTTOM: -5,
-        WIDTH: 10,
-        HEIGHT: 10,
-        CENTER: new Point(0, 0, 30),
-        CAMERA: new Point(0, 0, 50),
-        LIGHT: new Light(-40, 5, 10, lightPower),
-    }).current;
-
-    const math3D = useRef(new Math3D({ WIN })).current;
-    const figures = useRef({
+// Глобальное состояние приложения
+const appState = {
+    printPolygons: true,
+    printPoints: true,
+    printEdges: true,
+    fps: 0,
+    lightPower: 50000,
+    selectedFigure: 'sphere',
+    reqId: null,
+    lastFpsUpdate: Date.now(),
+    frameCount: 0,
+    canRotate: false,
+    dx: 0,
+    dy: 0,
+    scene: [],
+    figures: {
         cube: () => new Cube(),
         cylinder: () => new Cylinder(),
         sphere: () => new Sphere(),
@@ -56,32 +43,79 @@ const Graph3D = () => {
         hyperbolicParaboloid: () => new HyperbolicParaboloid(),
         oneSheetedHyperboloid: () => new OneSheetedHyperboloid(),
         parabolicCylinder: () => new ParabolicCylinder(),
-        twoSheetedHyperboloid: () => new TwoSheetedHyperboloid(),
+        //twoSheetedHyperboloid: () => new TwoSheetedHyperboloid(),
+    },
+    WIN: {
+        LEFT: -5,
+        BOTTOM: -5,
+        WIDTH: 10,
+        HEIGHT: 10,
+        CENTER: new Point(0, 0, 30),
+        CAMERA: new Point(0, 0, 50),
+        get LIGHT() {
+            return new Light(-40, 5, 10, appState.lightPower);
+        }
+    },
+    math3D: null
+};
 
-    }).current;
+// Инициализация глобального состояния
+appState.math3D = new Math3D({ WIN: appState.WIN });
+appState.scene = [appState.figures[appState.selectedFigure]()];
 
-    const mainCanvas = useRef(null);
-    const virtualCanvas = useRef(null);
-    const scene = useRef([figures.cube()]);
-    const reqId = useRef(null);
-    const lastFpsUpdate = useRef(Date.now());
-    const frameCount = useRef(0);
-    
-    const canRotate = useRef(false);
-    const dx = useRef(0);
-    const dy = useRef(0);
+class Graph3D extends Component {
+    constructor(props) {
+        super(props);
+        this.mainCanvasRef = React.createRef();
+        this.settingsContainerRef = React.createRef();
+        this.state = {}; // Пустое состояние, используем только для forceUpdate
+    }
 
-    const renderFrame = useCallback(() => {
-        if (!scene.current.length) return;
+    componentDidMount() {
+        this.initCanvas();
+        this.animate();
+    }
 
-        virtualCanvas.current?.clear();
-        mainCanvas.current?.clear();
+    componentWillUnmount() {
+        if (appState.reqId) {
+            cancelAnimationFrame(appState.reqId);
+        }
+    }
+
+    initCanvas() {
+        this.mainCanvas = new Canvas({
+            id: 'canvas3D',
+            width: 600,
+            height: 600,
+            WIN: appState.WIN,
+            doubleBuffered: true,
+            callbacks: {
+                wheel: this.handleWheel.bind(this),
+                mousemove: this.handleMouseMove.bind(this),
+                mouseup: this.handleMouseUp.bind(this),
+                mousedown: this.handleMouseDown.bind(this),
+                mouseleave: this.handleMouseUp.bind(this)
+            }
+        });
+    }
+
+    animate() {
+        const animateFrame = () => {
+            this.renderFrame();
+            appState.reqId = requestAnimationFrame(animateFrame);
+        };
+        appState.reqId = requestAnimationFrame(animateFrame);
+    }
+
+    renderFrame() {
+        if (!appState.scene.length) return;
+        this.mainCanvas?.clear();
 
         const allPolygons = [];
-        scene.current.forEach((figure, index) => {
-            math3D.calcRadius(figure);
-            math3D.calcDistance(figure, WIN.CAMERA, 'distance');
-            math3D.calcDistance(figure, WIN.LIGHT, 'lumen');
+        appState.scene.forEach((figure, index) => {
+            appState.math3D.calcRadius(figure);
+            appState.math3D.calcDistance(figure, appState.WIN.CAMERA, 'distance');
+            appState.math3D.calcDistance(figure, appState.WIN.LIGHT, 'lumen');
 
             figure.polygons.forEach(polygon => {
                 polygon.figureIndex = index;
@@ -89,50 +123,73 @@ const Graph3D = () => {
             });
         });
 
-        math3D.sortByArtistAlgorithm(allPolygons);
+        appState.math3D.sortByArtistAlgorithm(allPolygons);
 
-        if (printPolygons) {
-            allPolygons.forEach(polygon => {
-                const figure = scene.current[polygon.figureIndex];
-                const points = polygon.points.map(index => figure.points[index]);
-                const projected = points.map(point => ({
-                    x: math3D.xs(point),
-                    y: math3D.ys(point)
-                }));
+        if (appState.printPolygons) {
+        allPolygons.forEach(polygon => {
+            const figure = appState.scene[polygon.figureIndex];
+            const points = polygon.points.map(index => figure.points[index]);
+            const projected = points.map(point => ({
+                x: appState.math3D.xs(point),
+                y: appState.math3D.ys(point)
+            }));
 
-                const { isShadow, dark } = math3D.calcShadow(
+            //отвечает за затенение полигонов
+            let color;
+            if (polygon.unshaded) {
+                // Для незатеняемых полигонов используем исходный цвет без освещения
+                color = polygon.color;
+            } else {
+                // Для остальных полигонов применяем освещение
+                const { isShadow, dark } = appState.math3D.calcShadow(
                     polygon, 
-                    scene.current, 
-                    WIN.LIGHT
+                    appState.scene, 
+                    appState.WIN.LIGHT
                 );
 
                 let { r, g, b } = polygon.color;
-                const lumen = math3D.calcIllumination(
+                const lumen = appState.math3D.calcIllumination(
                     polygon.lumen,
-                    lightPowerRef.current * (isShadow ? dark : 1)
+                    appState.lightPower * (isShadow ? dark : 1)
                 );
 
                 r = Math.round(r * lumen);
                 g = Math.round(g * lumen);
                 b = Math.round(b * lumen);
+                color = `rgb(${r},${g},${b})`;
+            }
 
-                virtualCanvas.current.polygon(
-                    projected, 
-                    `rgb(${r},${g},${b})`
-                );
+            this.mainCanvas.polygon(projected, color);
+            
+            // Отображение номера полигона (опционально)
+            let center = {x: 0, y: 0, z: 0};
+            points.forEach(p => {
+                center.x += p.x;
+                center.y += p.y;
+                center.z += p.z;
             });
-        }
+            center.x /= points.length;
+            center.y /= points.length;
+            center.z /= points.length;
+            this.mainCanvas.text(
+                polygon.index,
+                appState.math3D.xs(center),
+                appState.math3D.ys(center),
+                'red'
+            );
+        });
+    }
 
-        if (printEdges) {
-            scene.current.forEach(figure => {
+        if (appState.printEdges) {
+            appState.scene.forEach(figure => {
                 figure.edges.forEach(edge => {
                     const p1 = figure.points[edge.p1];
                     const p2 = figure.points[edge.p2];
-                    virtualCanvas.current.line(
-                        math3D.xs(p1),
-                        math3D.ys(p1),
-                        math3D.xs(p2),
-                        math3D.ys(p2),
+                    this.mainCanvas.line(
+                        appState.math3D.xs(p1),
+                        appState.math3D.ys(p1),
+                        appState.math3D.xs(p2),
+                        appState.math3D.ys(p2),
                         '#000',
                         1
                     );
@@ -140,12 +197,12 @@ const Graph3D = () => {
             });
         }
 
-        if (printPoints) {
-            scene.current.forEach(figure => {
+        if (appState.printPoints) {
+            appState.scene.forEach(figure => {
                 figure.points.forEach(point => {
-                    virtualCanvas.current.point(
-                        math3D.xs(point),
-                        math3D.ys(point),
+                    this.mainCanvas.point(
+                        appState.math3D.xs(point),
+                        appState.math3D.ys(point),
                         '#ff0000',
                         3
                     );
@@ -153,189 +210,199 @@ const Graph3D = () => {
             });
         }
 
-        mainCanvas.current?.context.drawImage(
-            virtualCanvas.current?.canvas,
-            0, 0,
-            mainCanvas.current?.canvas.width,
-            mainCanvas.current?.canvas.height
-        );
-
-        const now = Date.now();
-        frameCount.current++;
-        if (now - lastFpsUpdate.current >= 1000) {
-            setFps(frameCount.current);
-            frameCount.current = 0;
-            lastFpsUpdate.current = now;
-        }
-
-        mainCanvas.current?.text(
-            `FPS: ${fps}`,
-            WIN.LEFT,
-            WIN.BOTTOM + WIN.HEIGHT - 1,
+        this.mainCanvas.text(
+            `FPS: ${appState.fps}`,
+            appState.WIN.LEFT,
+            appState.WIN.BOTTOM + appState.WIN.HEIGHT - 1,
             "green"
         );
-    }, [printPolygons, printEdges, printPoints, math3D, WIN, fps]);
 
-    const scheduleRender = useCallback(() => {
-        if (!reqId.current) {
-            reqId.current = requestAnimationFrame(() => {
-                renderFrame();
-                reqId.current = null;
+        this.mainCanvas?.swapBuffers();
+
+        const now = Date.now();
+        appState.frameCount++;
+        if (now - appState.lastFpsUpdate >= 1000) {
+            appState.fps = appState.frameCount;
+            appState.frameCount = 0;
+            appState.lastFpsUpdate = now;
+        }
+    }
+
+    scheduleRender() {
+        if (!appState.reqId) {
+            appState.reqId = requestAnimationFrame(() => {
+                this.renderFrame();
+                appState.reqId = null;
             });
         }
-    }, [renderFrame]);
+    }
 
-    const handleSettingsChange = useCallback(() => {
-        scheduleRender();
-        setRenderCount(prev => prev + 1);
-    }, [scheduleRender]);
-
-    const handleWheel = useCallback((event) => {
+    handleWheel(event) {
         const delta = event.deltaY > 0 ? 0.95 : 1.05;
-        scene.current.forEach(figure => {
-            figure.points.forEach(point => math3D.zoom(delta, point));
+        appState.scene.forEach(figure => {
+            figure.points.forEach(point => appState.math3D.zoom(delta, point));
         });
-        scheduleRender();
-    }, [math3D, scheduleRender]);
+        this.scheduleRender();
+    }
 
-    const handleMouseDown = useCallback((event) => {
-        canRotate.current = true;
-        dx.current = event.offsetX;
-        dy.current = event.offsetY;
-    }, []);
+    handleMouseDown(event) {
+        appState.canRotate = true;
+        appState.dx = event.offsetX;
+        appState.dy = event.offsetY;
+    }
 
-    const handleMouseUp = useCallback(() => {
-        canRotate.current = false;
-    }, []);
+    handleMouseUp() {
+        appState.canRotate = false;
+    }
 
-    const handleMouseMove = useCallback((event) => {
-        if (canRotate.current) {
+    handleMouseMove(event) {
+        if (appState.canRotate) {
             const sensitivity = 0.005;
-            scene.current.forEach(figure => {
+            appState.scene.forEach(figure => {
                 figure.points.forEach(point => {
-                    math3D.rotateOy(
-                        (dx.current - event.offsetX) * sensitivity,
+                    appState.math3D.rotateOy(
+                        (appState.dx - event.offsetX) * sensitivity,
                         point
                     );
-                    math3D.rotateOx(
-                        (event.offsetY - dy.current) * sensitivity,
-                        point
+                    appState.math3D.rotateOx(
+                        (event.offsetY - appState.dy) * sensitivity,
+                        point   
                     );
                 });
             });
-            dx.current = event.offsetX;
-            dy.current = event.offsetY;
-            scheduleRender();
+            appState.dx = event.offsetX;
+            appState.dy = event.offsetY;
+            this.scheduleRender();
         }
-    }, [math3D, scheduleRender]);
+    }
 
-    useEffect(() => {
-        mainCanvas.current = new Canvas({
-            id: 'canvas3D',
-            width: 600,
-            height: 600,
-            WIN: WIN,
-            callbacks: {
-                wheel: handleWheel,
-                mousemove: handleMouseMove,
-                mouseup: handleMouseUp,
-                mousedown: handleMouseDown,
-                mouseleave: handleMouseUp
-            }
-        });
+    updateLightPower(value) {
+        appState.lightPower = value;
+        this.scheduleRender();
+    }
 
-        virtualCanvas.current = new Canvas({
-            canvas: document.createElement('canvas'),
-            width: 600,
-            height: 600,
-            WIN: WIN
-        });
+    handleSettingsChange() {
+        this.forceUpdate(); // Принудительное обновление компонента
+        this.scheduleRender();
+    }
 
-        const animate = () => {
-            renderFrame();
-            reqId.current = requestAnimationFrame(animate);
-        };
-        reqId.current = requestAnimationFrame(animate);
+    handleFigureChange(e) {
+        const figureKey = e.target.value;
+        appState.selectedFigure = figureKey;
+        appState.scene = [appState.figures[figureKey]()];
+        
+        // Принудительное обновление UI
+        this.forceUpdate();
+        this.scheduleRender();
+    }
 
-        return () => cancelAnimationFrame(reqId.current);
-    }, [handleWheel, handleMouseMove, handleMouseUp, handleMouseDown, WIN, renderFrame]);
-
-    return (
-        <div style={{ padding: 20 }}>
-            <canvas id="canvas3D" style={{ border: '1px solid #ddd' }} />
-            
-            <div style={{ marginTop: 20 }}>
-                <LightController 
-                    lightPower={lightPower}
-                    onChange={setLightPower}
-                />
-                
-                <div style={{ margin: '10px 0' }}>
-                    <label>
-                        <input
-                            type="checkbox"
-                            checked={printPolygons}
-                            onChange={e => setPrintPolygons(e.target.checked)}
-                        />
-                        Полигоны
-                    </label>
-                    
-                    <label style={{ marginLeft: 15 }}>
-                        <input
-                            type="checkbox"
-                            checked={printPoints}
-                            onChange={e => setPrintPoints(e.target.checked)}
-                        />
-                        Точки
-                    </label>
-                    
-                    <label style={{ marginLeft: 15 }}>
-                        <input
-                            type="checkbox"
-                            checked={printEdges}
-                            onChange={e => setPrintEdges(e.target.checked)}
-                        />
-                        Ребра
-                    </label>
-                </div>
-
-                <div>
-                    <select
-                        value={selectedFigure}
-                        onChange={e => {
-                            setSelectedFigure(e.target.value);
-                            scene.current = [figures[e.target.value]()];
-                            handleSettingsChange();
-                        }}
-                        style={{ margin: '10px 0', padding: 5 }}
-                    >
-                        <option value="cube">Куб</option>
-                        <option value="cylinder">Цилиндр</option>
-                        <option value="sphere">Сфера</option>
-                        <option value="torus">Тор</option>
-                        <option value="ellipsoid">Эллипсоид</option>
-                        <option value="ellipticalCylinder">Эллиптический Цилиндр</option>
-                        <option value="ellipticalParaboloid">Эллиптический Параболойд</option>
-                        <option value="hyperboliccylinder">Гиперболический Цилиндр</option>
-                        <option value="hyperbolicParaboloid">Гиперболический Параболойд</option>
-                        <option value="oneSheetedHyperboloid">Однополосный Гиперболойд</option>
-                        <option value="parabolicCylinder">Параболический Цилиндр</option>
-                        <option value="twoSheetedHyperboloid">Двухполосный Гиперболойд</option>
-                    </select>
-                </div>
-
-                <div style={{ 
+    renderSettings() {
+        if (!appState.scene.length) return null;
+        
+        return (
+            <div 
+                key={appState.selectedFigure}
+                style={{ 
                     marginTop: 15,
                     padding: 10,
                     border: '1px solid #eee',
                     borderRadius: 8
-                }}>
-                    <h4 style={{ margin: '0 0 10px 0' }}>Настройки фигуры</h4>
-                    {scene.current[0]?.settings?.(handleSettingsChange)}
+                }}
+            >
+                <h4 style={{ margin: '0 0 10px 0' }}>Настройки фигуры</h4>
+                {appState.scene[0]?.settings?.(this.handleSettingsChange.bind(this))}
+            </div>
+        );
+    }
+
+    render() {
+        return (
+            <div style={{ padding: 20 }}>
+                <canvas 
+                    id="canvas3D" 
+                    ref={this.mainCanvasRef}
+                    style={{ border: '1px solid #ddd' }} 
+                />
+                
+                <div style={{ marginTop: 20 }}>
+                    <div style={{ marginBottom: 15 }}>
+                        <label style={{ display: 'block', marginBottom: 5 }}>
+                            Мощность света:
+                        </label>
+                        <input
+                            type="range"
+                            min="0"
+                            max="50000"
+                            defaultValue={appState.lightPower}
+                            onChange={e => this.updateLightPower(Number(e.target.value))}
+                            style={{ width: '30%' }}
+                        />
+                    </div>
+                    
+                    <div style={{ margin: '10px 0' }}>
+                        <label>
+                            <input
+                                type="checkbox"
+                                defaultChecked={appState.printPolygons}
+                                onChange={e => {
+                                    appState.printPolygons = e.target.checked;
+                                    this.scheduleRender();
+                                }}
+                            />
+                            Полигоны
+                        </label>
+                        
+                        <label style={{ marginLeft: 15 }}>
+                            <input
+                                type="checkbox"
+                                defaultChecked={appState.printPoints}
+                                onChange={e => {
+                                    appState.printPoints = e.target.checked;
+                                    this.scheduleRender();
+                                }}
+                            />
+                            Точки
+                        </label>
+                        
+                        <label style={{ marginLeft: 15 }}>
+                            <input
+                                type="checkbox"
+                                defaultChecked={appState.printEdges}
+                                onChange={e => {
+                                    appState.printEdges = e.target.checked;
+                                    this.scheduleRender();
+                                }}
+                            />
+                            Ребра
+                        </label>
+                    </div>
+
+                    <div>
+                        <select
+                            value={appState.selectedFigure}
+                            onChange={this.handleFigureChange.bind(this)}
+                            style={{ margin: '10px 0', padding: 5, width: '20%' }}
+                        >
+                            <option value="cube">Куб</option>
+                            <option value="cylinder">Цилиндр</option>
+                            <option value="sphere">Сфера</option>
+                            <option value="torus">Тор</option>
+                            <option value="ellipsoid">Эллипсоид</option>
+                            <option value="ellipticalCylinder">Эллиптический Цилиндр</option>
+                            <option value="ellipticalParaboloid">Эллиптический Параболойд</option>
+                            <option value="hyperboliccylinder">Гиперболический Цилиндр</option>
+                            <option value="hyperbolicParaboloid">Гиперболический Параболойд</option>
+                            <option value="oneSheetedHyperboloid">Однополосный Гиперболойд</option>
+                            <option value="parabolicCylinder">Параболический Цилиндр</option>
+                            <option value="twoSheetedHyperboloid">Двухполосный Гиперболоид</option>
+                        </select>
+                    </div>
+
+                    {this.renderSettings()}
                 </div>
             </div>
-        </div>
-    );
-};
+        );
+    }
+}
 
 export default Graph3D;

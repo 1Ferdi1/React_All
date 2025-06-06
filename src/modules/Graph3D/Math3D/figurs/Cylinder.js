@@ -22,7 +22,7 @@ class Cylinder extends Figure {
     }
 
     set radialSegments(value) {
-        this._radialSegments = Math.max(3, Math.floor(value)); // минимум 3
+        this._radialSegments = Math.max(0, Math.floor(value)); // минимум 3
         this.generateGeometry();
     }
 
@@ -118,6 +118,7 @@ class Cylinder extends Figure {
         const topCapStart = (this._heightSegments - 1) * this._radialSegments;
         const topCap = Array.from({length: this._radialSegments}, (_, i) => topCapStart + i);
         this.polygons.push(new Polygon(topCap, '#0000FF'));
+        this.setIndexPolygons();
     }
 
     settings() {
@@ -128,8 +129,8 @@ class Cylinder extends Figure {
                     <input
                         type="number"
                         value={this.radius}
-                        min="0.1"
-                        step="0.1"
+                        min="0"
+                        step="1"
                         onChange={(e) => {
                             this.radius = parseFloat(e.target.value);
                         }}
@@ -140,8 +141,8 @@ class Cylinder extends Figure {
                     <input
                         type="number"
                         value={this.height}
-                        min="0.1"
-                        step="0.1"
+                        min="0"
+                        step="1"
                         onChange={(e) => {
                             this.height = parseFloat(e.target.value);
                         }}
@@ -152,7 +153,7 @@ class Cylinder extends Figure {
                     <input
                         type="number"
                         value={this.radialSegments}
-                        min="3"
+                        min="0"
                         step="1"
                         onChange={(e) => {
                             this.radialSegments = parseInt(e.target.value, 10);
@@ -164,7 +165,7 @@ class Cylinder extends Figure {
                     <input
                         type="number"
                         value={this.heightSegments}
-                        min="1"
+                        min="0"
                         step="1"
                         onChange={(e) => {
                             this.heightSegments = parseInt(e.target.value, 10);

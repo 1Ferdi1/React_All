@@ -122,22 +122,18 @@ class EllipticalParaboloid extends Figure {
     }
 
     generatePolygons() {
-        for (let h = 0; h < this._heightSegments - 1; h++) {
-            for (let r = 0; r < this._radialSegments; r++) {
-                const current = h * this._radialSegments + r;
-                const next = current + 1;
-                const below = current + this._radialSegments;
-                const nextBelow = below + 1;
-                
-                const a = current;
-                const b = next % (h * this._radialSegments + this._radialSegments);
-                const c = nextBelow % ((h + 1) * this._radialSegments + this._radialSegments);
-                const d = below;
-                
-                this.polygons.push(new Polygon([a, b, c, d], '#00FF00'));
-            }
+    for (let h = 0; h < this._heightSegments - 1; h++) {
+        for (let r = 0; r < this._radialSegments; r++) {
+            const current = h * this._radialSegments + r;
+            const next = h * this._radialSegments + (r + 1) % this._radialSegments;
+            const below = (h + 1) * this._radialSegments + r;
+            const nextBelow = (h + 1) * this._radialSegments + (r + 1) % this._radialSegments;
+
+            this.polygons.push(new Polygon([current, next, nextBelow, below], '#00FF00'));
         }
     }
+    this.setIndexPolygons();
+}
 
     settings() {
         return (

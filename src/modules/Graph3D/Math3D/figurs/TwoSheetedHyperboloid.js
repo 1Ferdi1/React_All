@@ -155,6 +155,7 @@ class TwoSheetedHyperboloid extends Figure {
                 this.polygons.push(new Polygon([i, i + 1 - count, i + 1, i + count], '#FF69B4'));
             }
         }
+        this.setIndexPolygons();
     }
 
     settings() {

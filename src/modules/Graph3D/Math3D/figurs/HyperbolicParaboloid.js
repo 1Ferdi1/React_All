@@ -123,6 +123,7 @@ class HyperbolicParaboloid extends Figure {
                 this.polygons.push(new Polygon([a, b, c, d], '#00FF00'));
             }
         }
+        this.setIndexPolygons();
     }
 
     settings() {

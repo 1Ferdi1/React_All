@@ -138,6 +138,7 @@ class EllipticalCylinder extends Figure {
         
         // Добавляем крышки
         this.generateCaps();
+        this.setIndexPolygons();
     }
 
     generateCaps() {

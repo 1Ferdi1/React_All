@@ -92,6 +92,7 @@ class ParabolicCylinder extends Figure {
                 ], '#00BFFF'));
             }
         }
+        this.setIndexPolygons();
     }
 
     settings() {

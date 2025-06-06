@@ -179,25 +179,22 @@ class Math3D {
         return Math.sqrt(v.x ** 2 + v.y ** 2 + v.z ** 2);
     }
 
-    calcRadius(figure) {
+    calcRadius(figure, recalcRadius = false) {
         figure.polygons.forEach(polygon => {
             let points = polygon.points.map(index => figure.points[index]);
             if (points.some(p => !p)) return;
 
-            if (!polygon.center) {
-                const center = new Point(0, 0, 0);
-                points.forEach(p => {
-                    center.x += p.x;
-                    center.y += p.y;
-                    center.z += p.z;
-                });
-                center.x /= points.length;
-                center.y /= points.length;
-                center.z /= points.length;
-                polygon.center = center;
-            }
+            const center = new Point(0, 0, 0);
+            points.forEach(p => {
+                center.x += p.x;
+                center.y += p.y;
+                center.z += p.z;
+            });
+            center.x /= points.length;
+            center.y /= points.length;
+            center.z /= points.length;
+            polygon.center = center;
 
-            const center = polygon.center;
             let total = 0;
             points.forEach(point => {
                 total += this.calcVectorModule(this.calcVector(center, point));

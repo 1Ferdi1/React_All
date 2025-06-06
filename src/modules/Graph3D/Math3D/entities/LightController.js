@@ -1,5 +1,5 @@
 const LightController = ({ lightPower, onChange }) => {
-  const percentage = (lightPower / 1000000) * 100;
+  const percentage = (lightPower / 50000) * 100;
   return (
     <div style={{
       margin: '10px 0',
@@ -14,7 +14,7 @@ const LightController = ({ lightPower, onChange }) => {
         <input
           type="range"
           min="0"
-          max="1000000"
+          max="50000"
           step="1"
           value={lightPower}
           onChange={e => onChange(Number(e.target.value))}

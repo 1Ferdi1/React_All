@@ -1,10 +1,9 @@
 import {useState} from 'react';
-import Menu from './components/Menu/Menu';
-import RPG from './components/RPG/RPG';
-import Graph3D from './components/Graph3D/Graph3D';
-import Graph2D from './components/Graph2D/Graph2D';
+import Menu from './components/Menu/Menu.js';
+import Graph3D from './components/Graph3D/Graph3D.js';
+import Graph2D from './components/Graph2D/Graph2D.js';
 import Calculator from './components/Calculator/Calculator.js';
-import Esse from './components/Esse/Esse';
+import Esse from './components/Esse/Esse.js';
 
 import './App.css';
 
@@ -14,7 +13,6 @@ const App = () => {
       <div>
         <Menu showPage={setPage} />
         {page === 'Graph3D' && <Graph3D />}
-        {page === 'RPG' && <RPG />}
         {page === 'Graph2D' && <Graph2D />}
         {page === 'Calculator' && <Calculator />}
         {page === 'Esse' && <Esse />}
